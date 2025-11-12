@@ -1,4 +1,5 @@
 import { ethers } from "ethers"
+import { FILMLYTIC_CONTRACT_CONFIG } from "./contract-config"
 
 export const connectWallet = async () => {
   if (!window.ethereum) {
@@ -58,24 +59,21 @@ export const getSigner = async () => {
   return provider.getSigner()
 }
 
-export const recordVoteOnBlockchain = async (
-  contractAddress: string,
-  contractABI: any,
-  voterId: string,
-  filmIds: number[],
-) => {
+export const recordVoteOnBlockchain = async (voterId: string, filmIds: number[]) => {
   try {
     const signer = await getSigner()
-    const contract = new ethers.Contract(contractAddress, contractABI, signer)
+    const contract = new ethers.Contract(FILMLYTIC_CONTRACT_CONFIG.address, FILMLYTIC_CONTRACT_CONFIG.abi, signer)
 
-    // Record vote on blockchain
-    const tx = await contract.recordVote(voterId, filmIds)
-    const receipt = await tx.wait()
+    // Record each vote individually
+    for (const filmId of filmIds) {
+      const tx = await contract.recordVote(1, voterId, filmId)
+      const receipt = await tx.wait()
+      console.log(`Vote recorded for film ${filmId}:`, receipt.hash)
+    }
 
     return {
-      transactionHash: receipt.hash,
-      blockNumber: receipt.blockNumber,
-      blockExplorerUrl: `https://sepolia.basescan.org/tx/${receipt.hash}`,
+      success: true,
+      blockExplorerUrl: `https://sepolia.basescan.org/address/${FILMLYTIC_CONTRACT_CONFIG.address}`,
     }
   } catch (error) {
     console.error("Error recording vote on blockchain:", error)

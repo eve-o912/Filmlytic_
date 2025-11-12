@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { recordVoteOnBlockchain } from "@/lib/blockchain/client"
 import WalletConnect from "@/components/blockchain/wallet-connect"
+import { FILMLYTIC_CONTRACT_CONFIG } from "@/lib/blockchain/contract-config"
 
 interface Film {
   id: string
@@ -115,19 +116,16 @@ export default function VoterFilmSelection({
         .eq("id", voterId)
       if (voterError) throw voterError
 
-      if (walletConnected) {
+      if (walletConnected && FILMLYTIC_CONTRACT_CONFIG.address !== "0x0000000000000000000000000000000000000000") {
         try {
-          const contractAddress = process.env.NEXT_PUBLIC_FILMLYTIC_VOTES_ADDRESS
-          if (contractAddress) {
-            const txHash = await recordVoteOnBlockchain(
-              sessionId,
-              voterSerial,
-              selectedFilms[0] as unknown as number,
-              contractAddress,
-            )
-            setBlockchainTxHash(txHash)
-            setShowBlockchainInfo(true)
-          }
+          const filmIds = selectedFilms.map((filmId) => {
+            const film = films.find((f) => f.id === filmId)
+            return film?.film_number || 0
+          })
+
+          const txHash = await recordVoteOnBlockchain(voterSerial, filmIds)
+          setBlockchainTxHash(txHash)
+          setShowBlockchainInfo(true)
         } catch (error) {
           console.error("Blockchain recording failed:", error)
           // Votes already saved to Supabase, blockchain is optional
