@@ -63,7 +63,6 @@ export default function LiveDisplayPage() {
   useEffect(() => {
     if (!sessionId) return
 
-    // Subscribe to vote changes
     const supabase = createClient()
     const channel = supabase
       .channel(`live-display-${sessionId}`)
@@ -78,41 +77,53 @@ export default function LiveDisplayPage() {
   }, [sessionId])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-white mb-2">TUFA Voting Results</h1>
-          <p className="text-2xl text-slate-300">Total Votes Cast: {totalVotes}</p>
+          <h1 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2">
+            TUFA Voting
+          </h1>
+          <p className="text-3xl font-bold text-white mb-4">Total Votes: {totalVotes}</p>
+          <p className="text-slate-300 text-lg">Results updating in real-time</p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {results.map((result, index) => (
-            <Card key={result.filmId} className="bg-slate-800 border-slate-700">
-              <CardContent className="p-6 space-y-4">
+            <Card
+              key={result.filmId}
+              className="bg-slate-800/50 border-slate-700/50 backdrop-blur hover:bg-slate-800 transition-all duration-300 overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CardContent className="p-6 space-y-4 relative">
                 <div className="text-center">
-                  <div className="text-5xl font-bold text-white mb-2">#{index + 1}</div>
-                  <div className="text-3xl font-bold text-blue-400">Film {result.filmId}</div>
+                  <div className="text-5xl font-black text-white mb-2">#{index + 1}</div>
+                  <div className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    Film {result.filmId}
+                  </div>
                 </div>
 
                 <div className="text-center">
-                  <div className="text-6xl font-bold text-white">{result.voteCount}</div>
-                  <div className="text-slate-400">{result.voteCount === 1 ? "vote" : "votes"}</div>
+                  <div className="text-6xl font-black text-white">{result.voteCount}</div>
+                  <div className="text-slate-400 text-sm">{result.voteCount === 1 ? "vote" : "votes"}</div>
                 </div>
 
-                <div className="bg-slate-900 rounded p-4 max-h-48 overflow-y-auto">
-                  <div className="text-xs font-bold text-slate-400 mb-2">Voters:</div>
+                <div className="bg-slate-900/50 rounded-lg p-3 max-h-40 overflow-y-auto">
+                  <div className="text-xs font-bold text-slate-400 mb-2">Voter IDs:</div>
                   <div className="flex flex-wrap gap-2">
                     {result.voters.map((voter, idx) => (
-                      <div key={idx} className="bg-blue-600 text-white px-3 py-2 rounded font-mono font-bold text-sm">
+                      <div
+                        key={idx}
+                        className="bg-gradient-to-r from-primary to-secondary text-white px-2 py-1 rounded font-mono font-bold text-xs"
+                      >
                         {voter}
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="w-full bg-slate-700 rounded h-2">
+                <div className="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-blue-500 h-2 rounded transition-all duration-500"
+                    className="bg-gradient-to-r from-primary to-accent h-full rounded-full transition-all duration-500"
                     style={{ width: `${(result.voteCount / Math.max(...results.map((r) => r.voteCount), 1)) * 100}%` }}
                   />
                 </div>
@@ -121,7 +132,9 @@ export default function LiveDisplayPage() {
           ))}
         </div>
 
-        {results.length === 0 && <div className="text-center text-slate-400 text-2xl mt-12">Waiting for votes...</div>}
+        {results.length === 0 && (
+          <div className="text-center text-slate-300 text-3xl mt-16 font-semibold">Waiting for votes to start...</div>
+        )}
       </div>
     </div>
   )

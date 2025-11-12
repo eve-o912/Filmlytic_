@@ -79,10 +79,12 @@ export default function LiveResultsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50 to-blue-50 dark:from-slate-950 dark:via-cyan-950 dark:to-blue-950 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-bold text-slate-900 dark:text-white mb-4">Live Voting Results</h1>
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 dark:from-cyan-300 dark:via-blue-300 dark:to-purple-300 bg-clip-text text-transparent mb-4">
+            Live Voting Results
+          </h1>
           <p className="text-2xl text-slate-600 dark:text-slate-400 mb-2">
             Total Votes: <span className="font-bold text-blue-600 dark:text-blue-400">{totalVotes}</span>
           </p>
@@ -124,9 +126,13 @@ export default function LiveResultsPage() {
                           className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-full text-sm font-mono font-bold animate-pulse"
                         >
                           {voter}
+                          <span className="ml-2 text-xs">🔗</span>
                         </span>
                       ))}
                     </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+                      All votes are permanently recorded on Base blockchain for complete transparency
+                    </p>
                   </div>
                 )}
               </CardContent>

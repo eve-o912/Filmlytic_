@@ -32,10 +32,12 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-950 dark:via-purple-950 dark:to-slate-900 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Admin Panel</h1>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-700 to-blue-600 dark:from-purple-300 dark:to-blue-300 bg-clip-text text-transparent">
+            Admin Panel
+          </h1>
           <div className="flex gap-2">
             <a
               href="/live-display"
