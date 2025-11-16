@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { recordVoteOnBlockchain } from "@/lib/blockchain/client"
 import WalletConnect from "@/components/blockchain/wallet-connect"
 import { FILMLYTIC_CONTRACT_CONFIG } from "@/lib/blockchain/contract-config"
+import Link from "next/link"
 
 interface Film {
   id: string
@@ -153,97 +154,116 @@ export default function VoterFilmSelection({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Cast Your Votes</h1>
-              <p className="text-lg text-slate-600 dark:text-slate-400 mb-2">
-                Your Voter ID:{" "}
-                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{voterSerial}</span>
-              </p>
-            </div>
-            <WalletConnect
-              onConnected={(addr) => {
-                setWalletConnected(true)
-              }}
-            />
-          </div>
-          <div
-            className={`text-2xl font-bold font-mono mb-4 ${timeRemaining < 300000 ? "text-red-600" : "text-slate-600"}`}
-          >
-            Time Remaining: {formatTime(timeRemaining)}
-          </div>
-          <p className="text-slate-600 dark:text-slate-400">Select exactly 3 films you feel are your favorites</p>
+    <div className="min-h-screen bg-background">
+      {/* Background animation */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-40 right-20 w-96 h-96 bg-primary/15 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-40 left-20 w-96 h-96 bg-secondary/15 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-8 relative z-10">
+        {/* Header */}
+        <div className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50 -mx-6 mb-8 px-6 py-4 flex justify-between items-center">
+          <Link href="/" className="text-foreground hover:text-muted-foreground transition-colors">
+            ← Back
+          </Link>
+          <h1 className="text-3xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Cast Your Votes
+          </h1>
+          <WalletConnect onConnected={(addr) => setWalletConnected(true)} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {/* Voter Info Card */}
+        <div className="mb-8 p-6 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm">
+          <div className="grid grid-cols-3 gap-6 items-center">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Your Voter ID</p>
+              <p className="text-3xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-mono">{voterSerial}</p>
+            </div>
+            <div className="text-center border-l border-r border-border/50 py-4">
+              <p className="text-sm text-muted-foreground mb-1">Votes Selected</p>
+              <p className="text-4xl font-black text-accent">{selectedFilms.length}/3</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground mb-1">Time Remaining</p>
+              <p className={`text-3xl font-mono font-black ${timeRemaining < 300000 ? "text-red-600 dark:text-red-400 animate-pulse" : "text-primary"}`}>
+                {formatTime(timeRemaining)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Films Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {films.map((film) => (
             <Card
               key={film.id}
-              className={`cursor-pointer transition-all ${
+              className={`cursor-pointer transition-all group border-2 overflow-hidden hover:shadow-2xl ${
                 selectedFilms.includes(film.id)
-                  ? "ring-2 ring-blue-600 dark:ring-blue-400 shadow-lg"
-                  : "hover:shadow-md"
+                  ? "border-primary/50 bg-primary/5 ring-2 ring-primary/30 shadow-lg"
+                  : "border-border/50 hover:border-primary/30"
               }`}
               onClick={() => toggleFilmSelection(film.id)}
             >
-              <CardContent className="p-4 space-y-4">
-                <div className="relative aspect-video bg-slate-200 dark:bg-slate-800 rounded overflow-hidden">
+              <CardContent className="p-0 space-y-0">
+                {/* Poster Image */}
+                <div className="relative aspect-video bg-muted overflow-hidden">
                   <img
-                    src={
-                      film.poster_url || `/placeholder.svg?height=300&width=200&query=film+${film.film_number}+poster`
-                    }
+                    src={film.poster_url || `/placeholder.svg?height=300&width=200&query=film+${film.film_number}+poster`}
                     alt={film.title}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover transition-transform duration-300 ${selectedFilms.includes(film.id) ? "scale-110" : "group-hover:scale-105"}`}
                   />
                   {selectedFilms.includes(film.id) && (
-                    <div className="absolute inset-0 bg-blue-600/50 flex items-center justify-center">
-                      <div className="text-4xl text-white font-bold">✓</div>
+                    <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm flex items-center justify-center">
+                      <div className="text-6xl font-black text-white drop-shadow-lg">✓</div>
                     </div>
                   )}
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="font-bold text-slate-900 dark:text-white text-lg">{film.title}</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">{film.logline}</p>
-                  <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                    <p>
-                      <strong>Director:</strong> {film.director}
-                    </p>
-                    <p>
-                      <strong>Producer:</strong> {film.producer}
-                    </p>
+                  <div className="absolute top-3 right-3 bg-accent/90 backdrop-blur-sm px-3 py-1 rounded-full">
+                    <p className="text-xs font-bold text-accent-foreground">Film {film.film_number}</p>
                   </div>
                 </div>
 
-                <Button className="w-full" variant={selectedFilms.includes(film.id) ? "default" : "outline"}>
-                  {selectedFilms.includes(film.id) ? "Selected" : "Select"}
-                </Button>
+                {/* Film Details */}
+                <div className="p-5 space-y-3">
+                  <div>
+                    <h3 className="font-black text-lg line-clamp-2">{film.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{film.logline}</p>
+                  </div>
+
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <p><span className="font-semibold text-foreground">Director:</span> {film.director}</p>
+                    <p><span className="font-semibold text-foreground">Producer:</span> {film.producer}</p>
+                  </div>
+
+                  <Button
+                    className={`w-full font-bold h-10 transition-all ${
+                      selectedFilms.includes(film.id)
+                        ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-primary/20"
+                    }`}
+                  >
+                    {selectedFilms.includes(film.id) ? "✓ Selected" : "Select Film"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
+        {/* Blockchain note - subtle */}
         {showBlockchainInfo && blockchainTxHash && (
-          <div className="mt-8 p-4 bg-green-100 dark:bg-green-900 rounded-lg border border-green-300 dark:border-green-700 mb-6">
-            <p className="text-sm text-green-900 dark:text-green-100 mb-2">✓ Votes recorded on Base blockchain!</p>
-            <p className="text-xs font-mono text-green-800 dark:text-green-200 break-all">
-              Tx Hash:{" "}
-              <a
-                href={`https://basescan.org/tx/${blockchainTxHash}`}
-                target="_blank"
-                rel="noreferrer"
-                className="underline hover:no-underline"
-              >
-                {blockchainTxHash}
+          <div className="mb-8 p-4 rounded-xl border border-green-500/30 bg-green-500/5 backdrop-blur-sm">
+            <p className="text-xs text-green-700 dark:text-green-300 text-center">
+              ✓ <span className="font-semibold">Recorded on blockchain</span> •{" "}
+              <a href={`https://basescan.org/tx/${blockchainTxHash}`} target="_blank" rel="noreferrer" className="underline hover:no-underline">
+                View transaction
               </a>
             </p>
           </div>
         )}
 
-        <div className="flex justify-center gap-4">
+        {/* Submit Section */}
+        <div className="flex gap-4 justify-center">
           <Button
             onClick={() => {
               setSelectedFilms([])
@@ -251,6 +271,7 @@ export default function VoterFilmSelection({
             }}
             variant="outline"
             size="lg"
+            className="font-bold"
           >
             Cancel
           </Button>
@@ -258,9 +279,9 @@ export default function VoterFilmSelection({
             onClick={handleSubmitVotes}
             disabled={selectedFilms.length !== 3 || submitting}
             size="lg"
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all text-primary-foreground font-bold px-8"
           >
-            {submitting ? "Submitting..." : `Submit Votes (${selectedFilms.length}/3)`}
+            {submitting ? "Submitting..." : `Submit Votes`}
           </Button>
         </div>
       </div>

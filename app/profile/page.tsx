@@ -33,45 +33,57 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 dark:from-slate-950 dark:via-purple-950 dark:to-slate-900">
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary via-secondary to-accent rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">F</span>
+    <div className="min-h-screen bg-background">
+      {/* Background effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-40 right-20 w-96 h-96 bg-primary/15 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-40 left-20 w-96 h-96 bg-accent/15 rounded-full blur-3xl animate-float" style={{ animationDelay: "1s" }} />
+      </div>
+
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/50 border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between relative z-10">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary via-secondary to-accent rounded-xl flex items-center justify-center shadow-lg animate-glow">
+              <span className="text-white font-black text-xl">F</span>
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            <h1 className="text-2xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               Filmlytic
             </h1>
           </Link>
           <div className="flex gap-2">
             <Link href="/live-display" target="_blank">
-              <Button variant="outline" size="sm">
-                📊 Live Display
+              <Button className="bg-gradient-to-r from-secondary to-accent hover:shadow-lg text-secondary-foreground font-bold">
+                📊 Live
               </Button>
             </Link>
             <Link href="/">
-              <Button variant="ghost" size="sm">
-                ← Back
-              </Button>
+              <Button variant="outline">← Home</Button>
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2">
-            Admin Panel
+      <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
+        <div className="mb-12">
+          <h1 className="text-5xl md:text-6xl font-black mb-3">
+            <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              Admin Dashboard
+            </span>
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">Manage voting sessions, voters, and view live results</p>
+          <p className="text-lg text-muted-foreground">Manage voting session, voters, and monitor live results</p>
         </div>
 
         <Tabs defaultValue="session" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="session">Session Control</TabsTrigger>
-            <TabsTrigger value="voters">Voter Management</TabsTrigger>
-            <TabsTrigger value="results">Live Results</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50">
+            <TabsTrigger value="session" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-secondary">
+              ⚙ Session
+            </TabsTrigger>
+            <TabsTrigger value="voters" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-secondary">
+              👥 Voters
+            </TabsTrigger>
+            <TabsTrigger value="results" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-secondary">
+              📊 Results
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="session" className="space-y-6">
@@ -82,11 +94,9 @@ export default function ProfilePage() {
             {activeSession ? (
               <AdminVoterManagement sessionId={activeSession.id} />
             ) : (
-              <Card>
-                <CardContent className="pt-6">
-                  <p className="text-slate-600 dark:text-slate-400 text-center">
-                    No active session. Create one in Session Control to start.
-                  </p>
+              <Card className="border-border/50">
+                <CardContent className="pt-6 text-center text-muted-foreground">
+                  Create a session to manage voters
                 </CardContent>
               </Card>
             )}
@@ -96,11 +106,9 @@ export default function ProfilePage() {
             {activeSession ? (
               <AdminResults sessionId={activeSession.id} />
             ) : (
-              <Card>
-                <CardContent className="pt-6">
-                  <p className="text-slate-600 dark:text-slate-400 text-center">
-                    No active session. Create one in Session Control to see results.
-                  </p>
+              <Card className="border-border/50">
+                <CardContent className="pt-6 text-center text-muted-foreground">
+                  Create and activate a session to see results
                 </CardContent>
               </Card>
             )}
