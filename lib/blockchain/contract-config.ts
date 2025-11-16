@@ -1,8 +1,6 @@
 export const FILMLYTIC_CONTRACT_CONFIG = {
   // Base Sepolia testnet address (update after deployment)
-  address:
-    (process.env.NEXT_PUBLIC_FILMLYTIC_VOTES_ADDRESS as `0x${string}`) ||
-    ("0x0000000000000000000000000000000000000000" as `0x${string}`),
+  address: "0x1d2fe923a55b0d195baaee6da329229a2d55c165" as `0x${string}`,
 
   // Complete contract ABI
   abi: [

@@ -255,7 +255,7 @@ export default function VoterFilmSelection({
           <div className="mb-8 p-4 rounded-xl border border-green-500/30 bg-green-500/5 backdrop-blur-sm">
             <p className="text-xs text-green-700 dark:text-green-300 text-center">
               ✓ <span className="font-semibold">Recorded on blockchain</span> •{" "}
-              <a href={`https://basescan.org/tx/${blockchainTxHash}`} target="_blank" rel="noreferrer" className="underline hover:no-underline">
+              <a href={`https://sepolia.basescan.org/tx/${blockchainTxHash}`} target="_blank" rel="noreferrer" className="underline hover:no-underline">
                 View transaction
               </a>
             </p>

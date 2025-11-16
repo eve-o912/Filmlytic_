@@ -69,11 +69,7 @@ export const recordVoteOnBlockchain = async (voterId: string, filmIds: number[])
       const tx = await contract.recordVote(1, voterId, filmId)
       const receipt = await tx.wait()
       console.log(`Vote recorded for film ${filmId}:`, receipt.hash)
-    }
-
-    return {
-      success: true,
-      blockExplorerUrl: `https://sepolia.basescan.org/address/${FILMLYTIC_CONTRACT_CONFIG.address}`,
+      return receipt.hash // Return the hash from first transaction
     }
   } catch (error) {
     console.error("Error recording vote on blockchain:", error)
