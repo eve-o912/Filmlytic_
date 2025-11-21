@@ -153,3 +153,4 @@ export default function LiveDisplayPage() {
     </div>
   )
 }
+
