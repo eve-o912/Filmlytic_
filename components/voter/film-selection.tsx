@@ -43,11 +43,26 @@ export default function VoterFilmSelection({
 
   useEffect(() => {
     const fetchFilms = async () => {
-      const supabase = createClient()
-      const { data } = await supabase.from("films").select("*").eq("session_id", sessionId).order("film_number")
+      try {
+        const supabase = createClient()
+        console.log("[v0] Fetching films for session:", sessionId)
 
-      setFilms(data || [])
-      setLoading(false)
+        const { data, error } = await supabase
+          .from("films")
+          .select("*")
+          .eq("session_id", sessionId)
+          .order("film_number", { ascending: true })
+
+        console.log("[v0] Films fetched:", data, "Error:", error)
+
+        if (error) throw error
+        setFilms(data || [])
+      } catch (error) {
+        console.error("[v0] Error fetching films:", error)
+        alert("Error loading films. Please refresh the page.")
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchFilms()
@@ -104,18 +119,29 @@ export default function VoterFilmSelection({
           session_id: sessionId,
           voter_serial_number: voterSerial,
           film_id: film?.film_number || 0,
+          voted_at: new Date().toISOString(),
         }
       })
 
-      // Save to Supabase first
+      console.log("[v0] Submitting votes:", votesData)
+
       const { error: voteError } = await supabase.from("votes").insert(votesData)
-      if (voteError) throw voteError
+      if (voteError) {
+        console.error("[v0] Vote insertion error:", voteError)
+        throw voteError
+      }
 
       const { error: voterError } = await supabase
         .from("voters")
-        .update({ has_voted: true, voted_at: new Date() })
+        .update({ has_voted: true, voted_at: new Date().toISOString() })
         .eq("id", voterId)
-      if (voterError) throw voterError
+
+      if (voterError) {
+        console.error("[v0] Voter update error:", voterError)
+        throw voterError
+      }
+
+      console.log("[v0] Votes submitted successfully")
 
       if (walletConnected && FILMLYTIC_CONTRACT_CONFIG.address !== "0x0000000000000000000000000000000000000000") {
         try {
@@ -124,11 +150,13 @@ export default function VoterFilmSelection({
             return film?.film_number || 0
           })
 
+          console.log("[v0] Recording to blockchain with film IDs:", filmIds)
           const txHash = await recordVoteOnBlockchain(voterSerial, filmIds)
+          console.log("[v0] Blockchain transaction hash:", txHash)
           setBlockchainTxHash(txHash)
           setShowBlockchainInfo(true)
         } catch (error) {
-          console.error("Blockchain recording failed:", error)
+          console.error("[v0] Blockchain recording failed:", error)
           // Votes already saved to Supabase, blockchain is optional
         }
       }
@@ -138,7 +166,7 @@ export default function VoterFilmSelection({
       )
       router.push("/")
     } catch (error) {
-      console.error("Error submitting votes:", error)
+      console.error("[v0] Error submitting votes:", error)
       alert("Error submitting votes. Please try again.")
     } finally {
       setSubmitting(false)
@@ -148,7 +176,23 @@ export default function VoterFilmSelection({
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center">
-        <p>Loading films...</p>
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="mt-4 text-muted-foreground">Loading films...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (films.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400 font-semibold">No films found for this session.</p>
+          <Button onClick={() => router.push("/")} className="mt-4">
+            Go Back
+          </Button>
+        </div>
       </div>
     )
   }
