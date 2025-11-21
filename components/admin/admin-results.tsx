@@ -76,3 +76,4 @@ export default function AdminResults({ sessionId }: { sessionId: string }) {
     </Card>
   )
 }
+
