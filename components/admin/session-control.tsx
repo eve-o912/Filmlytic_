@@ -4,79 +4,117 @@ import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { generateQRToken, generateVoterSerialNumber } from "@/lib/utils/voting"
 import FilmManagement from "@/components/admin/film-management"
 
 export default function AdminSessionControl({ currentSession, onSessionChange }: any) {
-  const [sessionName, setSessionName] = useState("TUFA - 1st Edition")
-  const [numVoters, setNumVoters] = useState("50")
   const [loading, setLoading] = useState(false)
-
-  const handleCreateSession = async () => {
-    setLoading(true)
-    const supabase = createClient()
-
-    try {
-      // Create session
-      const { data: session } = await supabase
-        .from("voting_sessions")
-        .insert({
-          name: sessionName,
-          status: "pending",
-          total_films: 10,
-        })
-        .select()
-        .single()
-
-      if (session) {
-        // Generate voters
-        const votersData = Array.from({ length: Number.parseInt(numVoters) }, (_, i) => ({
-          session_id: session.id,
-          voter_serial_number: generateVoterSerialNumber(i),
-          qr_code_token: generateQRToken(),
-          has_voted: false,
-        }))
-
-        await supabase.from("voters").insert(votersData)
-
-        onSessionChange(session)
-        alert(`Session created with ${numVoters} voters!`)
-      }
-    } catch (error) {
-      console.error("Error creating session:", error)
-      alert("Error creating session")
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleStartVoting = async () => {
     if (!currentSession) return
 
+    setLoading(true)
     const supabase = createClient()
     const votingEndsAt = new Date(Date.now() + 20 * 60 * 1000) // 20 minutes from now
 
-    await supabase
+    const { data, error } = await supabase
       .from("voting_sessions")
       .update({
         status: "active",
-        voting_started_at: new Date(),
-        voting_ends_at: votingEndsAt,
+        voting_started_at: new Date().toISOString(),
+        voting_ends_at: votingEndsAt.toISOString(),
       })
       .eq("id", currentSession.id)
+      .select()
+      .single()
 
-    onSessionChange({ ...currentSession, status: "active", voting_started_at: new Date() })
+    if (error) {
+      console.error("Error starting voting:", error)
+      alert("Error starting voting: " + error.message)
+    } else {
+      onSessionChange(data)
+    }
+    setLoading(false)
   }
 
   const handleCloseVoting = async () => {
     if (!currentSession) return
 
+    setLoading(true)
     const supabase = createClient()
-    await supabase.from("voting_sessions").update({ status: "closed" }).eq("id", currentSession.id)
+    const { data, error } = await supabase
+      .from("voting_sessions")
+      .update({ 
+        status: "closed",
+        voting_ended_at: new Date().toISOString()
+      })
+      .eq("id", currentSession.id)
+      .select()
+      .single()
 
-    onSessionChange({ ...currentSession, status: "closed" })
+    if (error) {
+      console.error("Error closing voting:", error)
+      alert("Error closing voting: " + error.message)
+    } else {
+      onSessionChange(data)
+    }
+    setLoading(false)
+  }
+
+  const handleResetVoting = async () => {
+    if (!currentSession) return
+    if (!confirm("Reset voting? This will:\n- Set status to pending\n- Clear all votes\n- Reset all voters")) return
+
+    setLoading(true)
+    const supabase = createClient()
+
+    // Delete all votes
+    await supabase.from("votes").delete().eq("session_id", currentSession.id)
+
+    // Reset all voters
+    await supabase
+      .from("voters")
+      .update({ has_voted: false, voted_at: null })
+      .eq("session_id", currentSession.id)
+
+    // Reset session
+    const { data, error } = await supabase
+      .from("voting_sessions")
+      .update({
+        status: "pending",
+        voting_started_at: null,
+        voting_ends_at: null,
+        voting_ended_at: null
+      })
+      .eq("id", currentSession.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error resetting:", error)
+      alert("Error resetting: " + error.message)
+    } else {
+      onSessionChange(data)
+      alert("Session reset successfully!")
+    }
+    setLoading(false)
+  }
+
+  if (!currentSession) {
+    return (
+      <Card>
+        <CardContent className="pt-6 text-center text-muted-foreground">
+          No active session found. Run the setup SQL script in Supabase to create one.
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active": return "text-green-600"
+      case "closed": return "text-red-600"
+      default: return "text-yellow-600"
+    }
   }
 
   return (
@@ -84,70 +122,64 @@ export default function AdminSessionControl({ currentSession, onSessionChange }:
       <Card>
         <CardHeader>
           <CardTitle>Session Control</CardTitle>
-          <CardDescription>Manage voting sessions</CardDescription>
+          <CardDescription>Manage voting session</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!currentSession ? (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="session-name">Session Name</Label>
-                <Input
-                  id="session-name"
-                  value={sessionName}
-                  onChange={(e) => setSessionName(e.target.value)}
-                  placeholder="e.g., TUFA - 1st Edition"
-                />
-              </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-slate-900 dark:text-white">
+              Session: {currentSession.name}
+            </p>
+            <p className={`text-sm font-semibold ${getStatusColor(currentSession.status)}`}>
+              Status: {currentSession.status.toUpperCase()}
+            </p>
+            {currentSession.voting_started_at && (
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Started: {new Date(currentSession.voting_started_at).toLocaleString()}
+              </p>
+            )}
+            {currentSession.voting_ends_at && (
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Ends: {new Date(currentSession.voting_ends_at).toLocaleString()}
+              </p>
+            )}
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="num-voters">Number of Voters</Label>
-                <Input
-                  id="num-voters"
-                  type="number"
-                  value={numVoters}
-                  onChange={(e) => setNumVoters(e.target.value)}
-                  min="1"
-                />
-              </div>
+          {currentSession.status === "pending" && (
+            <Button 
+              onClick={handleStartVoting} 
+              disabled={loading}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              {loading ? "Starting..." : "Start Voting (20 min)"}
+            </Button>
+          )}
 
-              <Button onClick={handleCreateSession} disabled={loading} className="w-full">
-                {loading ? "Creating..." : "Create Session"}
-              </Button>
-            </>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-slate-900 dark:text-white">Session: {currentSession.name}</p>
-                <p
-                  className={`text-sm ${
-                    currentSession.status === "active"
-                      ? "text-green-600"
-                      : currentSession.status === "closed"
-                        ? "text-red-600"
-                        : "text-yellow-600"
-                  }`}
-                >
-                  Status: {currentSession.status.toUpperCase()}
-                </p>
-              </div>
+          {currentSession.status === "active" && (
+            <Button 
+              onClick={handleCloseVoting} 
+              disabled={loading}
+              className="w-full bg-red-600 hover:bg-red-700"
+            >
+              {loading ? "Closing..." : "Close Voting"}
+            </Button>
+          )}
 
-              {currentSession.status === "pending" && (
-                <Button onClick={handleStartVoting} className="w-full bg-green-600 hover:bg-green-700">
-                  Start Voting (20 min)
-                </Button>
-              )}
-
-              {currentSession.status === "active" && (
-                <Button onClick={handleCloseVoting} className="w-full bg-red-600 hover:bg-red-700">
-                  Close Voting
-                </Button>
-              )}
-            </>
+          {currentSession.status === "closed" && (
+            <Button 
+              onClick={handleResetVoting} 
+              disabled={loading}
+              variant="outline"
+              className="w-full"
+            >
+              {loading ? "Resetting..." : "Reset Session"}
+            </Button>
           )}
         </CardContent>
       </Card>
 
-      {currentSession && currentSession.status === "pending" && <FilmManagement sessionId={currentSession.id} />}
+      {currentSession.status === "pending" && (
+        <FilmManagement sessionId={currentSession.id} />
+      )}
     </>
   )
 }
